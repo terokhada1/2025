@@ -278,7 +278,7 @@
 
     // Add user to GitHub user.json using API
     async function addUserToGitHub(userJson) {
-      const token = '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';
+      const token = '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';
       const owner = 'terokhada1';
       const repo = 'm1';
       const path = 'user.json';
@@ -316,7 +316,7 @@
         sha: sha ? sha : undefined
       };
 
-      await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
         method: "PUT",
         headers: {
           Authorization: `token ${token}`,
@@ -324,6 +324,10 @@
         },
         body: JSON.stringify(body)
       });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error("GitHub API response: " + text);
+      }
     }
 
     // Signup form logic
@@ -349,12 +353,11 @@
         email,
         profile: { name }
       };
-      console.log(JSON.stringify(userJson, null, 2));
       try {
         await addUserToGitHub(userJson);
         alert("Signup successful and saved to user.json!");
       } catch (err) {
-        alert("Failed to save user. Check API token and permissions.");
+        alert("Failed to save user. See browser console for details.");
       }
     };
 
