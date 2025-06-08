@@ -11,6 +11,29 @@
       font-family: 'Inter', Arial, sans-serif;
       background: #fff;
     }
+    #splash {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      transition: opacity 0.4s;
+    }
+    .splash-text {
+      color: #fff;
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      font-family: 'Bungee', 'Arial Black', Arial, sans-serif;
+      text-shadow: 0 2px 16px #222;
+      animation: splashPop 1s linear;
+    }
+    @keyframes splashPop {
+      0% { opacity:0; transform: scale(0.5);}
+      100% { opacity:1; transform: scale(1);}
+    }
     .container {
       max-width: 375px;
       margin: 0 auto;
@@ -139,15 +162,6 @@
     #signupForm {
       display: none;
     }
-    #login-error {
-      color: #d23d3d;
-      min-height: 24px;
-      text-align: center;
-      margin-top: 20px;
-      font-size: 1.02rem;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-    }
     @media (max-width: 399px) {
       .card {padding: 18px 5px 10px 5px;}
       .container {padding: 0 2px;}
@@ -157,6 +171,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Bungee:wght@400&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <div id="splash">
+    <span class="splash-text">bongo</span>
+  </div>
   <div class="container">
     <form id="loginForm" class="card" autocomplete="on">
       <h2>Welcome Back</h2>
@@ -219,28 +236,24 @@
         <span class="switch-link" onclick="showLogin()">Login</span>
       </div>
     </form>
-    <div id="login-error"></div>
   </div>
   <script>
-    // Auto redirect if user_id exists in localStorage
-    (function(){
-      try {
-        var uid = localStorage.getItem('user_id');
-        if (uid && uid !== 'null') {
-          window.location.replace('profile.html');
-        }
-      } catch(e){}
-    })();
-
+    // Splash hide after 1.5s
+    window.onload = () => {
+      setTimeout(() => {
+        document.getElementById('splash').style.opacity = '0';
+        setTimeout(() => {
+          document.getElementById('splash').style.display = 'none';
+        }, 400);
+      }, 1500);
+    };
     function showSignup() {
       document.getElementById('loginForm').style.display = 'none';
       document.getElementById('signupForm').style.display = 'flex';
-      document.getElementById('login-error').textContent = '';
     }
     function showLogin() {
       document.getElementById('signupForm').style.display = 'none';
       document.getElementById('loginForm').style.display = 'flex';
-      document.getElementById('login-error').textContent = '';
     }
     function togglePassword(fieldName, el) {
       const input = document.querySelector('input[name="' + fieldName + '"]');
@@ -316,7 +329,7 @@
         sha: sha ? sha : undefined
       };
 
-      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
         method: "PUT",
         headers: {
           Authorization: `token ${token}`,
@@ -324,10 +337,6 @@
         },
         body: JSON.stringify(body)
       });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error("GitHub API response: " + text);
-      }
     }
 
     // Signup form logic
@@ -353,19 +362,18 @@
         email,
         profile: { name }
       };
+      console.log(JSON.stringify(userJson, null, 2));
       try {
         await addUserToGitHub(userJson);
         alert("Signup successful and saved to user.json!");
       } catch (err) {
-        alert("Failed to save user. See browser console for details.");
+        alert("Failed to save user. Check API token and permissions.");
       }
     };
 
     // Login form logic
     document.getElementById('loginForm').onsubmit = async function(e) {
       e.preventDefault();
-      const errorDiv = document.getElementById('login-error');
-      errorDiv.textContent = '';
       const emailInput = this.loginEmail.value.trim();
       const passwordInput = this.loginPassword.value;
       const owner = 'terokhada1';
@@ -376,10 +384,7 @@
         // Get user.json from GitHub (raw URL for public repo)
         const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`;
         const res = await fetch(url);
-        if (!res.ok) {
-          errorDiv.textContent = "Could not load user database. Please try again later.";
-          return;
-        }
+        if (!res.ok) throw new Error("Failed to load users");
         const users = await res.json();
 
         // Find matching user (by email or username, case-insensitive)
@@ -388,20 +393,17 @@
           (u.profile && u.profile.name && u.profile.name.toLowerCase() === emailInput.toLowerCase())
         );
 
-        if (!found) {
-          errorDiv.textContent = "No user found with this email or username.";
-        } else if (found.password !== passwordInput) {
-          errorDiv.textContent = "Password did not match.";
+        if (!found || found.password !== passwordInput) {
+          alert("Invalid email/username or password.");
         } else {
-          // Save the id in localStorage, then redirect
+          // Save user id to localStorage and redirect
           localStorage.setItem('user_id', found.id);
-          window.location.href = "https://terokhada1.github.io/2025";
+          window.location.href = 'https://terokhada1.github.io/2025';
         }
       } catch (err) {
-        errorDiv.textContent = "Login failed: " + err.message;
+        alert("Login failed: " + err.message);
       }
     };
-
   </script>
 </body>
 </html>
