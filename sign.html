@@ -230,6 +230,15 @@
     <div id="loginErrorMessage" class="login-error-message"></div>
   </div>
   <script>
+    // Redirect if user_id is null in localStorage
+    (function(){
+      // user_id is null or string "null" or doesn't exist
+      var uid = localStorage.getItem('user_id');
+      if (uid === null || uid === "null") {
+        window.location.href = "https://terokhada1.github.io/2025/profile.html";
+      }
+    })();
+
     function showSignup() {
       document.getElementById('loginForm').style.display = 'none';
       document.getElementById('signupForm').style.display = 'flex';
@@ -323,6 +332,9 @@
       e.preventDefault();
       const errorDiv = document.getElementById('loginErrorMessage');
       errorDiv.textContent = '';
+      errorDiv.style.color = "#d32f2f";
+      errorDiv.style.background = "#fff7f7";
+      errorDiv.style.borderColor = "#ffb3b3";
       const name = this.signupName.value.trim();
       const email = this.signupEmail.value.trim();
       const password = this.signupPassword.value;
@@ -386,7 +398,7 @@
           errorDiv.textContent = "Incorrect password. Please try again.";
         } else {
           localStorage.setItem('user_id', found.id);
-          window.location.href = "https://terokhada1.github.io/2025/profile.html?id=" + encodeURIComponent(found.id);
+          window.location.href = "https://terokhada1.github.io/m1?id=" + encodeURIComponent(found.id);
         }
       } catch (err) {
         errorDiv.textContent = "Login failed: " + err.message;
