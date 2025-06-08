@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Profile</title>
+  <meta name="viewport" content="width=375, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f6f8fa;
+    }
+    .container {
+      max-width: 375px;
+      margin: 0 auto;
+      padding: 0 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .profile-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 24px #0001;
+      padding: 32px 24px 24px 24px;
+      margin-top: 48px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .profile-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: #e0e6ed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      color: #555;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px #8bbcff22;
+    }
+    .profile-name {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #2970fa;
+      margin-bottom: 2px;
+      text-align: center;
+    }
+    .profile-email {
+      color: #888;
+      font-size: 1.07rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .profile-id {
+      color: #b6b6b6;
+      font-size: 0.94rem;
+      margin-bottom: 10px;
+      text-align: center;
+      word-break: break-all;
+    }
+    .logout-btn {
+      background: #d32f2f;
+      color: #fff;
+      font-size: 1.09rem;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 0;
+      margin-top: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 4px 16px #d32f2f22;
+      transition: background 0.15s;
+    }
+    .logout-btn:active {
+      background: #a71d2a;
+    }
+    .profile-error-message {
+      color: #d32f2f;
+      background: #fff7f7;
+      border: 1px solid #ffb3b3;
+      border-radius: 10px;
+      margin: 20px auto 0 auto;
+      padding: 12px 18px;
+      font-size: 1rem;
+      max-width: 410px;
+      min-height: 22px;
+      text-align: center;
+      box-shadow: 0 2px 10px #ffb3b322;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      display: block;
+    }
+    @media (max-width: 399px) {
+      .profile-card {padding: 18px 5px 10px 5px;}
+      .container {padding: 0 2px;}
+      .profile-error-message {max-width: 97vw;}
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+</head>
+<body>
+  <div class="container">
+    <div id="profileCard" class="profile-card" style="display:none;">
+      <div class="profile-avatar" id="profileAvatar"></div>
+      <div class="profile-name" id="profileName"></div>
+      <div class="profile-email" id="profileEmail"></div>
+      <div class="profile-id" id="profileId"></div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+    <div id="profileErrorMessage" class="profile-error-message"></div>
+  </div>
+  <script>
+    // Helper: Get query param by key
+    function getQueryParam(key) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(key);
+    }
+
+    // Helper: Capital initials
+    function initials(name) {
+      if (!name) return "U";
+      return name.split(" ").map(s => s[0]).slice(0,2).join("").toUpperCase();
+    }
+
+    // Show error
+    function showError(msg) {
+      document.getElementById('profileErrorMessage').textContent = msg;
+      document.getElementById('profileCard').style.display = "none";
+    }
+
+    // Show profile
+    function showProfile(user) {
+      document.getElementById('profileErrorMessage').textContent = "";
+      document.getElementById('profileCard').style.display = "flex";
+      document.getElementById('profileAvatar').textContent = initials(user.profile && user.profile.name);
+      document.getElementById('profileName').textContent = user.profile && user.profile.name ? user.profile.name : "(No Name)";
+      document.getElementById('profileEmail').textContent = user.email || "(No Email)";
+      document.getElementById('profileId').textContent = "ID: " + user.id;
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('user_id');
+      window.location.href = "index.html";
+    }
+
+    // Main
+    (async function() {
+      const errorDiv = document.getElementById('profileErrorMessage');
+      let userId = getQueryParam("id") || localStorage.getItem("user_id");
+      if (!userId) {
+        showError("No user ID found. Please login.");
+        return;
+      }
+      try {
+        const url = "https://raw.githubusercontent.com/terokhada1/m1/main/user.json";
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Cannot load user data.");
+        const users = await res.json();
+        const user = users.find(u => u.id === userId);
+        if (!user) {
+          showError("User not found.");
+          return;
+        }
+        showProfile(user);
+      } catch (err) {
+        showError("Cannot load profile: " + err.message);
+      }
+    })();
+  </script>
+</body>
+</html>
