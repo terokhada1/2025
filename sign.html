@@ -139,26 +139,18 @@
     #signupForm {
       display: none;
     }
-    .login-error-message {
-      color: #d32f2f;
-      background: #fff7f7;
-      border: 1px solid #ffb3b3;
-      border-radius: 10px;
-      margin: 20px auto 0 auto;
-      padding: 12px 18px;
-      font-size: 1rem;
-      max-width: 410px;
-      min-height: 22px;
+    #login-error {
+      color: #d23d3d;
+      min-height: 24px;
       text-align: center;
-      box-shadow: 0 2px 10px #ffb3b322;
-      font-weight: 500;
+      margin-top: 20px;
+      font-size: 1.02rem;
+      font-weight: 600;
       letter-spacing: 0.01em;
-      display: block;
     }
     @media (max-width: 399px) {
       .card {padding: 18px 5px 10px 5px;}
       .container {padding: 0 2px;}
-      .login-error-message {max-width: 97vw;}
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -227,27 +219,28 @@
         <span class="switch-link" onclick="showLogin()">Login</span>
       </div>
     </form>
-    <div id="loginErrorMessage" class="login-error-message"></div>
+    <div id="login-error"></div>
   </div>
   <script>
-    // Redirect if user_id is null in localStorage
+    // Auto redirect if user_id exists in localStorage
     (function(){
-      // user_id is null or string "null" or doesn't exist
-      var uid = localStorage.getItem('user_id');
-      if (uid === null || uid === "null") {
-        window.location.href = "https://terokhada1.github.io/2025/profile.html";
-      }
+      try {
+        var uid = localStorage.getItem('user_id');
+        if (uid && uid !== 'null') {
+          window.location.replace('profile.html');
+        }
+      } catch(e){}
     })();
 
     function showSignup() {
       document.getElementById('loginForm').style.display = 'none';
       document.getElementById('signupForm').style.display = 'flex';
-      document.getElementById('loginErrorMessage').textContent = '';
+      document.getElementById('login-error').textContent = '';
     }
     function showLogin() {
       document.getElementById('signupForm').style.display = 'none';
       document.getElementById('loginForm').style.display = 'flex';
-      document.getElementById('loginErrorMessage').textContent = '';
+      document.getElementById('login-error').textContent = '';
     }
     function togglePassword(fieldName, el) {
       const input = document.querySelector('input[name="' + fieldName + '"]');
@@ -260,12 +253,14 @@
       }
     }
 
+    // Unique ID generator (timestamp + random string)
     function generateUniqueId() {
       const ts = Date.now().toString(36);
       const rnd = Math.random().toString(36).substr(2, 6);
       return ts + rnd;
     }
 
+    // ---- Helper: Check if email already exists ----
     async function emailExists(email) {
       const owner = 'terokhada1';
       const repo = 'm1';
@@ -277,16 +272,18 @@
         const users = await res.json();
         return users.some(u => u.email && u.email.toLowerCase() === email.toLowerCase());
       } catch (e) {
-        return false;
+        return false; // If file not found, treat as not existing
       }
     }
 
+    // Add user to GitHub user.json using API
     async function addUserToGitHub(userJson) {
       const token = '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';
       const owner = 'terokhada1';
       const repo = 'm1';
       const path = 'user.json';
 
+      // Get the current content of user.json if exists
       let base64Content = '';
       let sha = '';
       try {
@@ -311,6 +308,7 @@
       }
       usersArr.push(userJson);
 
+      // Prepare the content for GitHub
       const newContent = btoa(JSON.stringify(usersArr, null, 2));
       const body = {
         message: "Add new user",
@@ -328,23 +326,20 @@
       });
     }
 
+    // Signup form logic
     document.getElementById('signupForm').onsubmit = async function(e) {
       e.preventDefault();
-      const errorDiv = document.getElementById('loginErrorMessage');
-      errorDiv.textContent = '';
-      errorDiv.style.color = "#d32f2f";
-      errorDiv.style.background = "#fff7f7";
-      errorDiv.style.borderColor = "#ffb3b3";
       const name = this.signupName.value.trim();
       const email = this.signupEmail.value.trim();
       const password = this.signupPassword.value;
       if (password.length <= 7) {
-        errorDiv.textContent = "Password must be more than 7 characters!";
+        alert("Password must be more than 7 characters!");
         this.signupPassword.focus();
         return;
       }
+      // Check for duplicate email
       if (await emailExists(email)) {
-        errorDiv.textContent = "This email is already registered. Please use a different email.";
+        alert("This email is already registered. Please use a different email.");
         this.signupEmail.focus();
         return;
       }
@@ -354,27 +349,20 @@
         email,
         profile: { name }
       };
+      console.log(JSON.stringify(userJson, null, 2));
       try {
         await addUserToGitHub(userJson);
-        errorDiv.textContent = "Signup successful and saved to user.json!";
-        errorDiv.style.color = "#388e3c";
-        errorDiv.style.background = "#e7fbe9";
-        errorDiv.style.borderColor = "#8ff5a6";
+        alert("Signup successful and saved to user.json!");
       } catch (err) {
-        errorDiv.textContent = "Failed to save user. Check API token and permissions.";
-        errorDiv.style.color = "#d32f2f";
-        errorDiv.style.background = "#fff7f7";
-        errorDiv.style.borderColor = "#ffb3b3";
+        alert("Failed to save user. Check API token and permissions.");
       }
     };
 
+    // Login form logic
     document.getElementById('loginForm').onsubmit = async function(e) {
       e.preventDefault();
-      const errorDiv = document.getElementById('loginErrorMessage');
+      const errorDiv = document.getElementById('login-error');
       errorDiv.textContent = '';
-      errorDiv.style.color = "#d32f2f";
-      errorDiv.style.background = "#fff7f7";
-      errorDiv.style.borderColor = "#ffb3b3";
       const emailInput = this.loginEmail.value.trim();
       const passwordInput = this.loginPassword.value;
       const owner = 'terokhada1';
@@ -382,28 +370,35 @@
       const path = 'user.json';
 
       try {
+        // Get user.json from GitHub (raw URL for public repo)
         const url = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`;
         const res = await fetch(url);
-        if (!res.ok) throw new Error("Cannot load users list. Please try again later.");
+        if (!res.ok) {
+          errorDiv.textContent = "Could not load user database. Please try again later.";
+          return;
+        }
         const users = await res.json();
 
+        // Find matching user (by email or username, case-insensitive)
         const found = users.find(u =>
           (u.email && u.email.toLowerCase() === emailInput.toLowerCase()) ||
           (u.profile && u.profile.name && u.profile.name.toLowerCase() === emailInput.toLowerCase())
         );
 
         if (!found) {
-          errorDiv.textContent = "No user found for this email or username.";
+          errorDiv.textContent = "No user found with this email or username.";
         } else if (found.password !== passwordInput) {
-          errorDiv.textContent = "Incorrect password. Please try again.";
+          errorDiv.textContent = "Password did not match.";
         } else {
+          // Save the id in localStorage, then redirect
           localStorage.setItem('user_id', found.id);
-          window.location.href = "https://terokhada1.github.io/2025?id=" + encodeURIComponent(found.id);
+          window.location.href = "https://terokhada1.github.io/2025";
         }
       } catch (err) {
         errorDiv.textContent = "Login failed: " + err.message;
       }
     };
+
   </script>
 </body>
 </html>
