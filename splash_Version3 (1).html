@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bongo Splash Screen</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #000;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .splash-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      background: #000;
+      position: relative;
+    }
+    .splash-text {
+      color: #fff;
+      font-size: 5rem;
+      font-family: 'Arial Black', Arial, sans-serif;
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-shadow: 0 0 20px #fff, 0 0 40px #fff;
+      user-select: none;
+      position: relative;
+      z-index: 2;
+      animation: flicker 2s infinite;
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; text-shadow: 0 0 20px #fff, 0 0 40px #fff;}
+      45% { opacity: 0.8; text-shadow: 0 0 10px #fff;}
+      48% { opacity: 0.6; text-shadow: 0 0 2px #fff;}
+      50% { opacity: 1; text-shadow: 0 0 40px #fff;}
+      55% { opacity: 0.5; text-shadow: 0 0 2px #fff;}
+      60% { opacity: 1; text-shadow: 0 0 20px #fff, 0 0 40px #fff;}
+    }
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      opacity: 0.5;
+      animation: bounce 4s linear infinite;
+    }
+    .circle1 {
+      width: 180px; height: 180px;
+      top: 12%; left: 18%;
+      animation-delay: 0s;
+    }
+    .circle2 {
+      width: 120px; height: 120px;
+      top: 75%; left: 65%;
+      animation-delay: 1.2s;
+    }
+    .circle3 {
+      width: 90px; height: 90px;
+      top: 55%; left: 35%;
+      animation-delay: 2s;
+    }
+    .circle4 {
+      width: 240px; height: 240px;
+      top: 30%; left: 75%;
+      animation-delay: 0.5s;
+    }
+    .circle5 {
+      width: 60px; height: 60px;
+      top: 70%; left: 20%;
+      animation-delay: 2.5s;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1) translateY(0px);}
+      50% { transform: scale(1.1) translateY(-30px);}
+    }
+    .bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 8px;
+      background: linear-gradient(90deg, #fff 0%, #000 100%);
+      animation: movebar 2s linear infinite;
+      opacity: 0.8;
+      z-index: 1;
+    }
+    @keyframes movebar {
+      0% { transform: translateX(-50vw);}
+      100% { transform: translateX(100vw);}
+    }
+  </style>
+  <script>
+    // Redirect after a short delay to display splash animation
+    window.onload = function() {
+      setTimeout(function() {
+        var userId = localStorage.getItem('user_id');
+        if (userId === null) {
+          window.location.href = "https://www.google.com";
+        } else {
+          window.location.href = "https://www.facebook.com";
+        }
+      }, 1800); // 1.8 seconds splash duration
+    };
+  </script>
+</head>
+<body>
+  <div class="splash-container">
+    <span class="circle circle1"></span>
+    <span class="circle circle2"></span>
+    <span class="circle circle3"></span>
+    <span class="circle circle4"></span>
+    <span class="circle circle5"></span>
+    <div class="splash-text">Bongo</div>
+    <div class="bar"></div>
+  </div>
+</body>
+</html>
